@@ -1,6 +1,6 @@
-import {Alert, FlatList, StyleSheet, Text, View} from "react-native";
+import {Alert, FlatList, StyleProp, StyleSheet, Text, useWindowDimensions, View} from "react-native";
 import Title from "../components/Title";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import NumberContainer from "../components/game/NumberContainer";
 import PrimaryButton from "../components/PrimaryButton";
 import Card from "../components/Card";
@@ -23,6 +23,20 @@ type GameScreenProps = {
     onGameOver: (rounds: number) => void;
 }
 
+type PortraitProps = {
+    styles: StyleProp<any>,
+    currentGuess: number,
+    handleLower: () => void,
+    handleUpper: () => void,
+}
+
+type LandScapeProps = {
+    styles: StyleProp<any>,
+    currentGuess: number,
+    handleLower: () => void,
+    handleUpper: () => void,
+}
+
 function GameScreen({userNumber, onGameOver}: GameScreenProps) {
     const initialGuess = generateRandomBetween(1, 100, userNumber);
     const [currentGuess, setCurrentGuess] = useState(initialGuess);
@@ -30,6 +44,7 @@ function GameScreen({userNumber, onGameOver}: GameScreenProps) {
     const [maxValue, setMaxValue] = useState(100)
     const [rounds, setRounds] = useState(0);
     const [roundList, setRoundList] = useState<Array<number>>([]);
+    const {width, height} = useWindowDimensions();
 
     useEffect(() => {
         if (currentGuess === userNumber) {
@@ -62,38 +77,94 @@ function GameScreen({userNumber, onGameOver}: GameScreenProps) {
         setRoundList((roundValue) => [currentGuess, ...roundValue]);
     }
 
+    console.log(`Current width is ${width}`)
+
     return (
-        <View style={styles.screen}>
-            <View style={{marginTop: 20}}>
-                <Title>Opponent´s Guess.</Title>
+        <>
+            {width > 400 ?
+                <LandscapeLayout
+                    styles={styles}
+                    currentGuess={currentGuess}
+                    handleLower={handleLower}
+                    handleUpper={handleUpper}/>
+                :
+                <PortraitLayout
+                    styles={styles}
+                    currentGuess={currentGuess}
+                    handleLower={handleLower}
+                    handleUpper={handleUpper}
+                />
+            }
+            <FlatList style={{flex: 2}} data={roundList} renderItem={
+                itemData =>
+                    (<Text
+                        style={styles.roundText}>{`#${roundList.length - itemData.index}: ${itemData.item}`}</Text>)
+            }/>
+        </>
+    )
+}
+
+
+const PortraitLayout: React.FC<PortraitProps> =
+    ({styles, currentGuess, handleLower, handleUpper}) => (
+        <>
+            <View style={styles.screen}>
+                <View style={{marginTop: 20}}>
+                    <Title>Opponent´s Guess.</Title>
+                </View>
+                <NumberContainer>
+                    {currentGuess}
+                </NumberContainer>
+                <Card>
+                    <Instruction>
+                        Higher or Lower?
+                    </Instruction>
+                    <View style={styles.buttonContainer}>
+                        <View style={{flex: 1}}>
+                            <PrimaryButton onPress={handleLower}>
+                                <Ionicons name="remove-outline"/>
+                            </PrimaryButton>
+                        </View>
+                        <View style={{flex: 1}}>
+                            <PrimaryButton onPress={handleUpper}>
+                                <Ionicons name="add-outline"/>
+                            </PrimaryButton>
+                        </View>
+                    </View>
+                </Card>
             </View>
-            <NumberContainer>
-                {currentGuess}
-            </NumberContainer>
-            <Card>
-                <Instruction>
-                    Higher or Lower?
-                </Instruction>
-                <View style={styles.buttonContainer}>
+        </>
+    )
+
+const LandscapeLayout: React.FC<PortraitProps> =
+    ({styles, currentGuess, handleLower, handleUpper}: LandScapeProps) => (
+        <>
+            <View style={{flex: 1}}>
+                <Title style={{marginTop: 36, marginHorizontal: 48, fontSize: 16}}>Opponent Guess</Title>
+                <View style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginHorizontal: 16
+                }}>
                     <View style={{flex: 1}}>
                         <PrimaryButton onPress={handleLower}>
                             <Ionicons name="remove-outline"/>
                         </PrimaryButton>
                     </View>
+                    <NumberContainer>
+                        {currentGuess}
+                    </NumberContainer>
                     <View style={{flex: 1}}>
                         <PrimaryButton onPress={handleUpper}>
                             <Ionicons name="add-outline"/>
                         </PrimaryButton>
                     </View>
                 </View>
-            </Card>
-            <FlatList data={roundList} renderItem={
-                itemData =>
-                    (<Text style={styles.roundText}>{`#${roundList.length - itemData.index}: ${itemData.item}`}</Text>)
-            }/>
-        </View>
+            </View>
+        </>
     )
-}
 
 const styles = StyleSheet.create({
     screen: {

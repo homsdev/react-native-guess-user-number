@@ -1,6 +1,6 @@
-import {Alert, StyleSheet, TextInput, View} from "react-native";
+import {Alert, KeyboardAvoidingView, ScrollView, StyleSheet, TextInput, useWindowDimensions, View} from "react-native";
 import PrimaryButton from "../components/PrimaryButton";
-import {useState} from "react";
+import React, {useMemo, useState} from "react";
 import Colors from "../constants/Colors";
 import Card from "../components/Card";
 import Instruction from "../components/Instruction";
@@ -12,6 +12,10 @@ type StartGameScreenProps = {
 
 function StartGameScreen({onPickNumber}: StartGameScreenProps) {
     const [enteredNumber, setEnteredNumber] = useState('');
+    const {width, height} = useWindowDimensions();
+    const dynamicStyles = useMemo(() => {
+        return getStyles(height, width);
+    }, [height, width]);
 
     function numberInputHandler(enteredText: string) {
         setEnteredNumber(enteredText);
@@ -36,47 +40,55 @@ function StartGameScreen({onPickNumber}: StartGameScreenProps) {
     }
 
     return (
-        <View style={{marginTop: 100}}>
-            <Title style={{marginBottom: 24, marginHorizontal: 18}}>Guess my number</Title>
-            <Card>
-                <Instruction style={{fontSize: 18,color: Colors.accent500}}>Type a number</Instruction>
-                <TextInput
-                    style={styles.numberInput}
-                    maxLength={2}
-                    keyboardType="number-pad"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    value={enteredNumber}
-                    onChangeText={numberInputHandler}
-                />
-                <View style={styles.buttonsContainer}>
-                    <View style={{flex: 1}}>
-                        <PrimaryButton onPress={resetEnteredNumber}>Reset</PrimaryButton>
-                    </View>
-                    <View style={{flex: 1}}>
-                        <PrimaryButton onPress={confirmInputHandler}>Confirm</PrimaryButton>
-                    </View>
+        <ScrollView>
+            <KeyboardAvoidingView behavior="position" style={{flex: 1}}>
+                <View style={dynamicStyles.container}>
+                    <Title style={{marginBottom: 24, marginHorizontal: 18}}>Guess my number</Title>
+                    <Card>
+                        <Instruction style={{fontSize: 18, color: Colors.accent500}}>Type a number</Instruction>
+                        <TextInput
+                            style={dynamicStyles.numberInput}
+                            maxLength={2}
+                            keyboardType="number-pad"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            value={enteredNumber}
+                            onChangeText={numberInputHandler}
+                        />
+                        <View style={dynamicStyles.buttonsContainer}>
+                            <View style={{flex: 1}}>
+                                <PrimaryButton onPress={resetEnteredNumber}>Reset</PrimaryButton>
+                            </View>
+                            <View style={{flex: 1}}>
+                                <PrimaryButton onPress={confirmInputHandler}>Confirm</PrimaryButton>
+                            </View>
+                        </View>
+                    </Card>
                 </View>
-            </Card>
-        </View>
+            </KeyboardAvoidingView>
+        </ScrollView>
     )
 }
 
-const styles = StyleSheet.create({
-    numberInput: {
-        height: 60,
-        width: 50,
-        fontSize: 32,
-        borderColor: Colors.accent500,
-        borderBottomWidth: 2,
-        color: Colors.accent500,
-        marginVertical: 8,
-        fontWeight: "bold",
-        textAlign: "center",
-    },
-    buttonsContainer: {
-        flexDirection: "row",
-    }
-});
+const getStyles = (height: number, width: number) =>
+    StyleSheet.create({
+        container: {
+            marginTop: height >= 400 ? 100 : 36,
+        },
+        numberInput: {
+            height: 60,
+            width: 50,
+            fontSize: 32,
+            borderColor: Colors.accent500,
+            borderBottomWidth: 2,
+            color: Colors.accent500,
+            marginVertical: 8,
+            fontWeight: "bold",
+            textAlign: "center",
+        },
+        buttonsContainer: {
+            flexDirection: "row",
+        }
+    });
 
 export default StartGameScreen;
